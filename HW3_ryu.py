@@ -81,7 +81,8 @@ class MyRyu(app_manager.RyuApp):
         mod = parser.OFPFlowMod(datapath=datapath, priority=priority, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
         print mod
-        
+        #---------------------------------------------------------------在這以下註解掉就是普通的可以互ping的情形
+        #---------------------------------------------------------------我這裡加上第二個條件就是從port1來的 都接到port2去 所以從port1來的不會到port3 
         #table_id = 2
         match = parser.OFPMatch(in_port=1)#, eth_dst='ff:ff:ff:ff:ff:ff'
         actions = [parser.OFPActionOutput(2)]
