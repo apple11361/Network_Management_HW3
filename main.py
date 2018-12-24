@@ -42,6 +42,32 @@ class Switch(app_manager.RyuApp):
 
         print("Debug: add flow!")
 
+    def send_group_mod(self, datapath):
+        ofp = datapath.ofproto
+        ofp_parser = datapath.ofproto_parser
+
+        port_1 = 1
+        port_2 = 2
+        port_3 = 3
+        max_len = 2000
+        actions_1 = [ofp_parser.OFPActionOutput(port_1, max_len)]
+        actions_2 = [ofp_parser.OFPActionOutput(port_2, max_len)]
+        actions_3 = [ofp_parser.OFPActionOutput(port_3, max_len)]
+
+        weight_1 = 100
+	weight_2 = 100
+        weight_3 = 100
+        watch_port = ofproto_v1_3.OFPP_ANY
+        watch_group = ofproto_v1_3.OFPQ_ALL
+        buckets = [
+	    ofp_parser.OFPBucket(weight_1, watch_port, watch_group, actions_1), 
+            ofp_parser.OFPBucket(weight_2, watch_port, watch_group, actions_2), 
+            ofp_parser.OFPBucket(weight_3, watch_port, watch_group, actions_3)]
+
+        group_id = 1
+        req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD, ofp.OFPGT_SELECT, group_id, buckets)
+        datapath.send_msg(req)
+
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         print("Debug: get packet!")
