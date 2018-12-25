@@ -47,20 +47,12 @@ class MyRyu(app_manager.RyuApp):
             else:
                 print ('The port to communicate with controller: %d' % stat.port_no)
 
-        # Defnie table 0 for s1, s2 to filter packets
-        if(datapath.id == 1 or datapath.id == 2):
-            # Drop packet if tcp_dst == 22
-            match = parser.OFPMatch(tcp_dst=22)
-            inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
-            mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
-                                    command=ofproto.OFPFC_ADD, match=match, instructions=inst)
-            datapath.send_msg(mod)
-
-            # Forward the rest of the packets to table 1
-            match = parser.OFPMatch()
-            inst = [parser.OFPInstructionGotoTable(1)]
-            mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=0,
-                                    command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        if(datapath.id == 1):
+            self.s1_init(datapath, ofproto, parser)
+        elif(datapath.id == 2):
+            self.s2_init(datapath, ofproto, parser)
+        elif(datapath.id == 3):
+            self.s3_init(datapath, ofproto, parser)
 
         if len(self.normal_port) == 2:
             print self.normal_port
@@ -121,3 +113,37 @@ class MyRyu(app_manager.RyuApp):
         mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority+2, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
 
+    def s1_init(self, datapath, ofproto, parser):
+        #****** Defnie table 0 to filter packets ******#
+        # Drop packet if tcp_dst == 22
+        match = parser.OFPMatch(tcp_dst=22)
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
+        mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+        # Forward the rest of the packets to table 1
+        match = parser.OFPMatch()
+        inst = [parser.OFPInstructionGotoTable(1)]
+        mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=0,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+    def s2_init(self, datapath, ofproto, parser):
+        #****** Defnie table 0 to filter packets ******#
+        # Drop packet if tcp_dst == 22
+        match = parser.OFPMatch(tcp_dst=22)
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
+        mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+        # Forward the rest of the packets to table 1
+        match = parser.OFPMatch()
+        inst = [parser.OFPInstructionGotoTable(1)]
+        mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=0,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+    def s3_init(self, datapath, ofproto, parser):
+        print 'Not implemented'
