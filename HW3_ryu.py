@@ -116,7 +116,8 @@ class MyRyu(app_manager.RyuApp):
     def s1_init(self, datapath, ofproto, parser):
         #****** Defnie table 0 to filter packets ******#
         # Drop packet if tcp_dst == 22
-        match = parser.OFPMatch(tcp_dst=22)
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, tcp_dst=22)
+        #match = parser.OFPMatch(in_port=22)
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
         mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
@@ -129,6 +130,33 @@ class MyRyu(app_manager.RyuApp):
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
 
+        # Forward to table 2 if packets wanna go to h3
+        match = parser.OFPMatch(eth_dst='00:00:00:00:00:03')
+        port_1 = 2
+        actions_1 = [parser.OFPActionOutput(port_1)]
+
+        port_2 = 3
+        actions_2 = [parser.OFPActionOutput(port_2)]
+
+        weight_1 = 50
+        weight_2 = 50
+        watch_port = ofproto_v1_3.OFPP_ANY
+        watch_group = ofproto_v1_3.OFPQ_ALL
+
+        buckets = [
+            parser.OFPBucket(weight_1, watch_port, watch_group, actions_1),
+            parser.OFPBucket(weight_2, watch_port, watch_group, actions_2)]
+
+        group_id = 1
+        req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD, ofproto.OFPGT_SELECT, group_id, buckets)
+
+        datapath.send_msg(req)
+            
+        actions = [parser.OFPActionGroup(1)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(datapath=datapath, match=match, cookie=0, command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0, priority=10, instructions=inst)
+        
+        datapath.send_msg(mod)
     def s2_init(self, datapath, ofproto, parser):
         #****** Defnie table 0 to filter packets ******#
         # Drop packet if tcp_dst == 22
@@ -144,6 +172,61 @@ class MyRyu(app_manager.RyuApp):
         mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=0,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
+        
+        # Forward to table 2 if packets wanna go to h1
+        match = parser.OFPMatch(eth_dst='00:00:00:00:00:01')
+        port_1 = 1
+        actions_1 = [parser.OFPActionOutput(port_1)]
 
+        port_2 = 3
+        actions_2 = [parser.OFPActionOutput(port_2)]
+
+        weight_1 = 50
+        weight_2 = 50
+        watch_port = ofproto_v1_3.OFPP_ANY
+        watch_group = ofproto_v1_3.OFPQ_ALL
+
+        buckets = [
+            parser.OFPBucket(weight_1, watch_port, watch_group, actions_1),
+            parser.OFPBucket(weight_2, watch_port, watch_group, actions_2)]
+
+        group_id = 1
+        req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD, ofproto.OFPGT_SELECT, group_id, buckets)
+
+        datapath.send_msg(req)
+            
+        actions = [parser.OFPActionGroup(1)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(datapath=datapath, match=match, cookie=0, command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0, priority=10, instructions=inst)
+        
+        datapath.send_msg(mod)
+
+        # packets wanna go to h2
+        match = parser.OFPMatch(eth_dst='00:00:00:00:00:02')
+        port_1 = 1
+        actions_1 = [parser.OFPActionOutput(port_1)]
+
+        port_2 = 3
+        actions_2 = [parser.OFPActionOutput(port_2)]
+
+        weight_1 = 50
+        weight_2 = 50
+        watch_port = ofproto_v1_3.OFPP_ANY
+        watch_group = ofproto_v1_3.OFPQ_ALL
+
+        buckets = [
+            parser.OFPBucket(weight_1, watch_port, watch_group, actions_1),
+            parser.OFPBucket(weight_2, watch_port, watch_group, actions_2)]
+
+        group_id = 2
+        req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD, ofproto.OFPGT_SELECT, group_id, buckets)
+
+        datapath.send_msg(req)
+            
+        actions = [parser.OFPActionGroup(2)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(datapath=datapath, match=match, cookie=0, command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0, priority=10, instructions=inst)
+        
+        datapath.send_msg(mod)
     def s3_init(self, datapath, ofproto, parser):
         print 'Not implemented'
