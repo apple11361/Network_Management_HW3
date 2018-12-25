@@ -86,26 +86,14 @@ class MyRyu(app_manager.RyuApp):
     def add_flow(self, datapath, priority, match, actions ,table_id):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-        #print datapath.id
-        #table_id = 1
         next_table_id = 1
         inst = [parser.OFPInstructionGotoTable(next_table_id)]
-        #inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
     
         mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
-        #print mod
-        #---------------------------------------------------------------在這以下註解掉就是普通的可以互ping的情形
-        #---------------------------------------------------------------我這裡加上第二個條件就是從port1來的 都接到port2去 所以從port1來的不會到port3
-        #""" 
         table_id = 1
-        #match = parser.OFPMatch(eth_dst='00:00:00:00:00:01')
-        #actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
         match = parser.OFPMatch()#, eth_dst='ff:ff:ff:ff:ff:ff'
-        #actions = [parser.OFPActionOutput(2)]
         print actions
-        #print match
-        #print actions
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
  
         mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority+1, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
@@ -118,34 +106,3 @@ class MyRyu(app_manager.RyuApp):
         mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority+2, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
 
-        #print mod
-        #"""
-    """
-    def add_flow(self, datapath, priority, match, actions):
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
- 
-        
-        cookie = cookie_mask = 0
-        table_id = 10
-        next_table_id = 11
-        inst = [parser.OFPInstructionGotoTable(next_table_id)]
-        mod = parser.OFPFlowMod(cookie = cookie ,cookie_mask = cookie_mask, table_id = table_id, datapath=datapath, priority=priority, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
-        datapath.send_msg(mod)
-
-        cookie = cookie_mask = 0
-        table_id = 11
-
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
- 
-        mod = parser.OFPFlowMod(cookie = cookie ,cookie_mask = cookie_mask, table_id = table_id, datapath=datapath, priority=priority, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
-        datapath.send_msg(mod)
-        
-        match = parser.OFPMatch(in_port=1)#, eth_dst='ff:ff:ff:ff:ff:ff'
-        actions = [parser.OFPActionOutput(2)]
-        print 
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
- 
-        mod = parser.OFPFlowMod(datapath=datapath, priority=priority+1, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
-        datapath.send_msg(mod)
-    """
