@@ -115,9 +115,9 @@ class MyRyu(app_manager.RyuApp):
 
     def s1_init(self, datapath, ofproto, parser):
         #****** Defnie table 0 to filter packets ******#
-        # Drop packet if tcp_dst == 22
-        match = parser.OFPMatch(tcp_dst=22)
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
+        # Drop packet if tcp_dst == 22(Table 3 has no flow entry)
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, tcp_dst=22)
+        inst = [parser.OFPInstructionGotoTable(3)]
         mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
@@ -131,9 +131,9 @@ class MyRyu(app_manager.RyuApp):
 
     def s2_init(self, datapath, ofproto, parser):
         #****** Defnie table 0 to filter packets ******#
-        # Drop packet if tcp_dst == 22
-        match = parser.OFPMatch(tcp_dst=22)
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
+        # Drop packet if tcp_dst == 22(Table 3 has no flow entry)
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, tcp_dst=22)
+        inst = [parser.OFPInstructionGotoTable(3)]
         mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
