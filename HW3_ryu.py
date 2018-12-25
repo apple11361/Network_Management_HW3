@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 # 2016.07.30 kshuang
- 
+
 from ryu.base import app_manager
 from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_3_parser
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller import ofp_event
-from ryu.ofproto import ofproto_v1_3_parser
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
  
@@ -23,27 +23,30 @@ class MyRyu(app_manager.RyuApp):
         datapath = ev.msg.datapath
         self.send_port_stats_request(datapath)
  
- 
+    #Query the description of the switch
     def send_port_stats_request(self, datapath):
         ofp = datapath.ofproto
         ofp_parser = datapath.ofproto_parser
         req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_ANY)
         datapath.send_msg(req)
  
- 
+    #Get the description of the switch
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def port_stats_reply_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-        print datapath.id
+        print '/**************************************/'
+        print ('The description of switch %d:' % datapath.id)
+        print ('The maximum number of physical ports: %d' % ofproto.OFPP_MAX)
         for stat in ev.msg.body:
-            print stat.port_no
-            print ofproto.OFPP_MAX
             if stat.port_no < ofproto.OFPP_MAX:
+                print ('The mormal port: %d' % stat.port_no)
                 self.normal_port.append(stat.port_no)
-        
+            else:
+                print ('The port to communicate with controller: %d' % stat.port_no)
+
         if len(self.normal_port) == 2:
             print self.normal_port
             # h3 to s2
