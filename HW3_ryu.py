@@ -54,71 +54,11 @@ class MyRyu(app_manager.RyuApp):
         elif(datapath.id == 3):
             self.s3_init(datapath, ofproto, parser)
 
-        if len(self.normal_port) == 2:
-            print self.normal_port
-            # h3 to s2
-            match = parser.OFPMatch(in_port=self.normal_port[0])
-            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-            self.add_flow(datapath, 1, match, actions,0)
-            # s2 to h3
-            match = parser.OFPMatch(in_port=self.normal_port[1])
-            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-            self.add_flow(datapath, 1, match, actions,0)
-            # s2 to h3
-            match = parser.OFPMatch(in_port=3)
-            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-            self.add_flow(datapath, 1, match, actions,0)
-
-        if len(self.normal_port) == 3:
-            print self.normal_port
-            # h1 to all
-            match = parser.OFPMatch(in_port=self.normal_port[0])
-            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-            self.add_flow(datapath, 1, match, actions,0)
-            # h2 to all
-            match = parser.OFPMatch(in_port=self.normal_port[1])
-            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-            self.add_flow(datapath, 1, match, actions,0)
-            # s2 to all
-            match = parser.OFPMatch(in_port=self.normal_port[2])
-            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-            self.add_flow(datapath, 1, match, actions,0)
-            # s2 to h3
-            match = parser.OFPMatch(in_port=4)
-            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-            self.add_flow(datapath, 1, match, actions,0)
-        # clear port record after add flow entry
-        self.normal_port = []
- 
-    def add_flow(self, datapath, priority, match, actions ,table_id):
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        next_table_id = 1
-        inst = [parser.OFPInstructionGotoTable(next_table_id)]
-    
-        mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
-        datapath.send_msg(mod)
-        table_id = 1
-        match = parser.OFPMatch()
-        print actions
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
- 
-        mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority+1, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
-        datapath.send_msg(mod)
-
-        match = parser.OFPMatch(eth_dst='00:00:00:00:00:03')
-        actions = [parser.OFPActionOutput(1)]
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
- 
-        mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority+2, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
-        datapath.send_msg(mod)
-
     def s1_init(self, datapath, ofproto, parser):
-        #****** Defnie table 0 to filter packets ******#
-        # Drop packet if tcp_dst == 22
+        #****** Define table 0 to filter packets ******#
+        # Drop packet if tcp_dst == 22(Table 3 has no flow entry)
         match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, tcp_dst=22)
-        #match = parser.OFPMatch(in_port=22)
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
+        inst = [parser.OFPInstructionGotoTable(3)]
         mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
@@ -158,10 +98,10 @@ class MyRyu(app_manager.RyuApp):
         
         datapath.send_msg(mod)
     def s2_init(self, datapath, ofproto, parser):
-        #****** Defnie table 0 to filter packets ******#
-        # Drop packet if tcp_dst == 22
-        match = parser.OFPMatch(tcp_dst=22)
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
+        #****** Define table 0 to filter packets ******#
+        # Drop packet if tcp_dst == 22(Table 3 has no flow entry)
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, tcp_dst=22)
+        inst = [parser.OFPInstructionGotoTable(3)]
         mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
@@ -229,4 +169,10 @@ class MyRyu(app_manager.RyuApp):
         
         datapath.send_msg(mod)
     def s3_init(self, datapath, ofproto, parser):
-        print 'Not implemented'
+        match = parser.OFPMatch()
+        actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=0,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
