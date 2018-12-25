@@ -42,7 +42,7 @@ class MyRyu(app_manager.RyuApp):
         print ('The maximum number of physical ports: %d' % ofproto.OFPP_MAX)
         for stat in ev.msg.body:
             if stat.port_no < ofproto.OFPP_MAX:
-                print ('The mormal port: %d' % stat.port_no)
+                print ('The normal port: %d' % stat.port_no)
                 self.normal_port.append(stat.port_no)
             else:
                 print ('The port to communicate with controller: %d' % stat.port_no)
@@ -61,9 +61,9 @@ class MyRyu(app_manager.RyuApp):
             match = parser.OFPMatch(in_port=3)
             actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
             self.add_flow(datapath, 1, match, actions,0)
+
         if len(self.normal_port) == 3:
             print self.normal_port
-            
             # h1 to all
             match = parser.OFPMatch(in_port=self.normal_port[0])
             actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
