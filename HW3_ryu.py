@@ -47,6 +47,21 @@ class MyRyu(app_manager.RyuApp):
             else:
                 print ('The port to communicate with controller: %d' % stat.port_no)
 
+        # Defnie table 0 for s1, s2 to filter packets
+        if(datapath.id == 1 or datapath.id == 2):
+            # Drop packet if tcp_dst == 22
+            match = parser.OFPMatch(tcp_dst=22)
+            inst = [parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS, [])]
+            mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=1,
+                                    command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+            datapath.send_msg(mod)
+
+            # Forward the rest of the packets to table 1
+            match = parser.OFPMatch()
+            inst = [parser.OFPInstructionGotoTable(1)]
+            mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=0,
+                                    command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+
         if len(self.normal_port) == 2:
             print self.normal_port
             # h3 to s2
@@ -92,7 +107,7 @@ class MyRyu(app_manager.RyuApp):
         mod = parser.OFPFlowMod(table_id = table_id, datapath=datapath, priority=priority, command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
         table_id = 1
-        match = parser.OFPMatch()#, eth_dst='ff:ff:ff:ff:ff:ff'
+        match = parser.OFPMatch()
         print actions
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
  
