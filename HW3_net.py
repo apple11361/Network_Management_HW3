@@ -3,6 +3,7 @@ from mininet.node import RemoteController
 from mininet.net import Mininet
 from mininet.cli import CLI
  
+REMOTE_CONTROLLER_IP = "192.168.0.10"
  
 def MininetTopo():
     net = Mininet()
@@ -15,7 +16,6 @@ def MininetTopo():
  
  
     info("Create switch node.\n")
-    #s1 = net.addSwitch("s1",failMode = 'standalone')
     s1 = net.addSwitch("s1",failMode = 'secure',protocols = 'OpenFlow13' , mac='10:00:00:00:00:01')
     s2 = net.addSwitch("s2",failMode = 'secure',protocols = 'OpenFlow13' , mac='10:00:00:00:00:02')
     s3 = net.addSwitch("s3",failMode = 'secure',protocols = 'OpenFlow13' , mac='10:00:00:00:00:03')
@@ -25,19 +25,17 @@ def MininetTopo():
     net.addLink(h2,s1)
     net.addLink(h3,s2)
     net.addLink(h4,s3)
-    #net.addLink(h4,s2)
     net.addLink(s1,s2)
     net.addLink(s2,s3)
 
     info("Create controller ot switch. \n")
-    net.addController(controller=RemoteController,ip='10.0.2.15',port=6633)
+    net.addController(controller=RemoteController,ip=REMOTE_CONTROLLER_IP,port=6633)
  
     info("Build and start network.\n")
     net.build()
     net.start()
     info("Run the mininet CLI")
     CLI(net)
- 
  
 if __name__ == '__main__':
     setLogLevel('info')
