@@ -16,11 +16,11 @@ class MyTopo( Topo ):
         Topo.__init__( self )
 
         # Add hosts and switches
-        Host1 = self.addHost( 'h1', ip='192.168.1.11/24' )
-        Host2 = self.addHost( 'h2', ip='192.168.1.12/24' )
-        Host3 = self.addHost( 'h3', ip='192.168.2.11/24' )
-        Switch1 = self.addSwitch( 's1', protocols="OpenFlow13" )
-        Switch2 = self.addSwitch( 's2', protocols="OpenFlow13" )
+        Host1 = self.addHost( 'h1', ip='192.168.1.11/24', mac='00:00:00:00:00:01' )
+        Host2 = self.addHost( 'h2', ip='192.168.1.12/24', mac='00:00:00:00:00:02' )
+        Host3 = self.addHost( 'h3', ip='192.168.2.11/24', mac='00:00:00:00:00:03' )
+        Switch1 = self.addSwitch( 's1', protocols="OpenFlow13", mac='10:00:00:00:00:01' )
+        Switch2 = self.addSwitch( 's2', protocols="OpenFlow13", mac='10:00:00:00:00:02' )
 
         # Add links
         self.addLink( Host1, Switch1 )
