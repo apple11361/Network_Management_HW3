@@ -70,6 +70,30 @@ class MyRyu(app_manager.RyuApp):
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
 
+        #****** Define table 1 to forward packets ******#
+        # Forward the packets to the h1
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, ipv4_dst='192.168.1.11')
+        actions = [parser.OFPActionOutput(port=1)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(table_id=1, datapath=datapath, priority=2,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+        # Forward the packets to the h2
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, ipv4_dst='192.168.1.12')
+        actions = [parser.OFPActionOutput(port=2)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(table_id=1, datapath=datapath, priority=2,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+        # Forward the packets to table 2
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, ipv4_dst='192.168.2.11')
+        inst = [parser.OFPInstructionGotoTable(2)]
+        mod = parser.OFPFlowMod(table_id=1, datapath=datapath, priority=2,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
     def s2_init(self, datapath, ofproto, parser):
         #****** Define table 0 to filter packets ******#
         # Drop packet if tcp_dst == 22(Table 3 has no flow entry)
