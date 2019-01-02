@@ -94,6 +94,37 @@ class MyRyu(app_manager.RyuApp):
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
 
+        #****** Define table 2 to forward packets ******#
+        # Group 0: divide packets equally to s2 and s3
+        port_1 = 3  #s2
+        actions_1 = [parser.OFPActionOutput(port_1)]
+
+        port_2 = 4  #s3
+        actions_2 = [parser.OFPActionOutput(port_2)]
+
+        weight_1 = 50
+        weight_2 = 50
+        watch_port = ofproto_v1_3.OFPP_ANY
+        watch_group = ofproto_v1_3.OFPQ_ALL
+
+        buckets = [
+            parser.OFPBucket(weight_1, watch_port, watch_group, actions_1),
+            parser.OFPBucket(weight_2, watch_port, watch_group, actions_2)]
+
+        group_id = 0
+        req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD, ofproto.OFPGT_SELECT,
+                                 group_id, buckets)
+
+        datapath.send_msg(req)
+
+        # send packet to group 0
+        match = parser.OFPMatch()
+        actions = [parser.OFPActionGroup(0)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(table_id=2, datapath=datapath, priority=0,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+            
     def s2_init(self, datapath, ofproto, parser):
         #****** Define table 0 to filter packets ******#
         # Drop packet if tcp_dst == 22(Table 3 has no flow entry)
@@ -109,24 +140,60 @@ class MyRyu(app_manager.RyuApp):
         mod = parser.OFPFlowMod(table_id=0, datapath=datapath, priority=0,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
-
+        
         #****** Define table 1 to forward packets ******#
         # Forward the packets to the h3
         match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, ipv4_dst='192.168.2.11')
         actions = [parser.OFPActionOutput(port=1)]
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        mod = parser.OFPFlowMod(table_id=1, datapath=datapath, priority=2,
+        mod = parser.OFPFlowMod(table_id=1, datapath=datapath, priority=1,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
 
         # Forward the packets to table 2
-        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, ipv4_dst=('192.168.1.11',
-                                                                       '192.168.1.12'))
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, ipv4_dst='192.168.1.11')
         inst = [parser.OFPInstructionGotoTable(2)]
         mod = parser.OFPFlowMod(table_id=1, datapath=datapath, priority=2,
                                 command=ofproto.OFPFC_ADD, match=match, instructions=inst)
         datapath.send_msg(mod)
 
+        match = parser.OFPMatch(eth_type=0x0800, ip_proto=6, ipv4_dst='192.168.1.12')
+        inst = [parser.OFPInstructionGotoTable(2)]
+        mod = parser.OFPFlowMod(table_id=1, datapath=datapath, priority=2,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+        #****** Define table 2 to forward packets ******#
+        # Divide packets equally to s2 and s3
+        port_1 = 2  #s1
+        actions_1 = [parser.OFPActionOutput(port_1)]
+
+        port_2 = 3  #s3
+        actions_2 = [parser.OFPActionOutput(port_2)]
+
+        weight_1 = 50
+        weight_2 = 50
+        watch_port = ofproto_v1_3.OFPP_ANY
+        watch_group = ofproto_v1_3.OFPQ_ALL
+
+        buckets = [
+            parser.OFPBucket(weight_1, watch_port, watch_group, actions_1),
+            parser.OFPBucket(weight_2, watch_port, watch_group, actions_2)]
+
+        group_id = 0
+        req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD, ofproto.OFPGT_SELECT,
+                                 group_id, buckets)
+
+        datapath.send_msg(req)
+
+        # send packet to group 0
+        match = parser.OFPMatch()
+        actions = [parser.OFPActionGroup(0)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(table_id=2, datapath=datapath, priority=0,
+                                command=ofproto.OFPFC_ADD, match=match, instructions=inst)
+        datapath.send_msg(mod)
+ 
     def s3_init(self, datapath, ofproto, parser):
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
